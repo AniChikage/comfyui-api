@@ -7,12 +7,13 @@ from botocore.client import Config
 from PIL import Image
 from fastapi import APIRouter, Form, File, UploadFile, Request
 from utils import get_images
+import asyncio
 import config as CONFIG
 
 router = APIRouter()
 
-@router.post("/v1/api/function/text2image")
-async def text2image(request: Request, prompt: str=Form(...), height: str=Form(...), width: str=Form(...)):
+
+async def generate_img(prompt, width, height):
     with open("./workflows/flux1_fp8_workflow_api.json", "r", encoding="utf-8") as f:
         workflow_data = f.read()
     workflow = json.loads(workflow_data)
@@ -44,8 +45,19 @@ async def text2image(request: Request, prompt: str=Form(...), height: str=Form(.
     try:
         s3.upload_file(f"./images/{output_image_name}.png", CONFIG.OSS_BUCKET, f"{output_image_name}.png")
         print(f"{output_image_name}.png 已成功上传到 {CONFIG.OSS_BUCKET}/{output_image_name}.png")
+        return 200, "ok", output_image_name
     except Exception as e:
         print(f"上传文件时出错: {e}")
-        return {"status": "0", "msg": "upload failed, oss failed", "result": {}}
+        return 500, "error", ""
 
-    return {"status": "0", "msg": "generate successfully", "result": {"image_name": f"{output_image_name}.png"}}
+
+@router.post("/v1/api/function/text2image")
+async def text2image(request: Request, prompt: str=Form(...), height: str=Form(...), width: str=Form(...)):
+    try:
+        code, msg, output_image_name = await asyncio.wait_for(generate_img(), timeout=60)
+        if code == 200:
+            return {"status": "200", "msg": "generate successfully", "data": {"image_name": f"{output_image_name}.png"}}
+        else:
+            return {"status": "500", "msg": "generate failed", "data": {}}
+    except asyncio.TimeoutError:
+        return {"status": "500", "msg": "timeout", "data": {}}
