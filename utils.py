@@ -11,7 +11,7 @@ def queue_prompt(prompt, client_id):
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
     req =  urllib.request.Request(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/prompt", data=data)
-    return json.loads(urllib.request.urlopen(req).read())
+    return json.loads(urllib.request.urlopen(req, timeout=60).read())
 
 def get_image(filename, subfolder, folder_type):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
