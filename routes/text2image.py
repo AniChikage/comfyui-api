@@ -54,7 +54,7 @@ async def generate_img(prompt, width, height):
 @router.post("/v1/api/function/text2image")
 async def text2image(request: Request, prompt: str=Form(...), height: str=Form(...), width: str=Form(...)):
     try:
-        code, msg, output_image_name = await asyncio.wait_for(generate_img(), timeout=60)
+        code, msg, output_image_name = await asyncio.wait_for(generate_img(prompt=prompt, width=width, height=height), timeout=60)
         if code == 200:
             return {"status": "200", "msg": "generate successfully", "data": {"image_name": f"{output_image_name}.png"}}
         else:
