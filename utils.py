@@ -11,16 +11,16 @@ def queue_prompt(prompt, client_id):
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
     req =  urllib.request.Request(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/prompt", data=data)
-    return json.loads(urllib.request.urlopen(req, timeout=60).read())
+    return json.loads(urllib.request.urlopen(req, timeout=600).read())
 
 def get_image(filename, subfolder, folder_type):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
     url_values = urllib.parse.urlencode(data)
-    with urllib.request.urlopen(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/view?{url_values}") as response:
+    with urllib.request.urlopen(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/view?{url_values}", timeout=600) as response:
         return response.read()
 
 def get_history(prompt_id):
-    with urllib.request.urlopen(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/history/{prompt_id}") as response:
+    with urllib.request.urlopen(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/history/{prompt_id}", timeout=600) as response:
         return json.loads(response.read())
 
 def get_images(ws, prompt, client_id):
@@ -63,7 +63,7 @@ def upload_file(file, subfolder="", overwrite=False):
         if subfolder:
             data["subfolder"] = subfolder
 
-        resp = requests.post(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/upload/image", files=body,data=data)
+        resp = requests.post(f"http://{CONFIG.COMFYUI_IP}:{CONFIG.COMFYUI_PORT}/upload/image", files=body,data=data, timeout=600)
         
         if resp.status_code == 200:
             data = resp.json()
